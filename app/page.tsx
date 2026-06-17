@@ -1,65 +1,125 @@
+"use client";
+
+import { Header } from "@/app/components/Header";
+import { Footer } from "@/app/components/Footer";
+import { ProductCard } from "@/app/components/ProductCard";
+import { products } from "@/app/lib/mock-data";
+import Link from "next/link";
 import Image from "next/image";
+import { Truck, RefreshCw, Award, Shield } from "lucide-react";
 
 export default function Home() {
+  const bestSellers = products.slice(0, 4);
+  const categories = [
+    { name: "Chairs", image: "/products/Chairs/IMAGE 2026-06-14 17:08:08.jpg" },
+    { name: "Sofas", image: "/products/Sofas/IMAGE 2026-06-14 17:19:51.jpg" },
+    { name: "Tables", image: "/products/Tables/IMAGE 2026-06-14 17:20:14.jpg" },
+    { name: "Beds", image: "/products/Beds/IMAGE 2026-06-14 17:21:05.jpg" },
+    {
+      name: "Storage",
+      image: "/products/Shelves/IMAGE 2026-06-14 17:20:49.jpg",
+    },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <main className="min-h-screen bg-white">
+      <Header />
+
+      {/* Hero Section */}
+      <section className="relative h-96 md:h-[500px] bg-cover bg-center flex items-center justify-center overflow-hidden">
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+          src="/products/Hero:Banner images/IMAGE 2026-06-14 17:22:28.jpg"
+          alt="Design Your Dream Space"
+          fill
+          loading="eager"
+          sizes="100vw"
+          className="object-cover"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="relative text-center text-white z-10 px-4">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white">
+            Design Your Dream Space
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl md:text-2xl mb-8 text-white/90">
+            Premium furniture collections curated for modern living
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/shop"
+            className="inline-block bg-black px-8 py-3 rounded-lg hover:opacity-90 transition text-white font-semibold"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Shop Now
+          </Link>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Features */}
+      <section className="max-w-7xl mx-auto px-4 py-16 grid md:grid-cols-4 gap-8">
+        <div className="flex flex-col items-center text-center">
+          <Truck className="w-12 h-12 mb-4 text-[#222222]" />
+          <h3 className="font-semibold mb-2 text-[#222222]">Free Shipping</h3>
+          <p className="text-[#666666] text-sm">On orders over $100</p>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <RefreshCw className="w-12 h-12 mb-4 text-[#222222]" />
+          <h3 className="font-semibold mb-2 text-[#222222]">Easy Returns</h3>
+          <p className="text-[#666666] text-sm">30-day return guarantee</p>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <Award className="w-12 h-12 mb-4 text-[#222222]" />
+          <h3 className="font-semibold mb-2 text-[#222222]">Secure Payment</h3>
+          <p className="text-[#666666] text-sm">100% secure transactions</p>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <Shield className="w-12 h-12 mb-4 text-[#222222]" />
+          <h3 className="font-semibold mb-2 text-[#222222]">24/7 Support</h3>
+          <p className="text-[#666666] text-sm">Dedicated customer service</p>
+        </div>
+      </section>
+
+      {/* Shop by Category */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <h2 className="text-4xl font-bold mb-12 text-[#222222]">
+          Shop by Category
+        </h2>
+        <div className="grid md:grid-cols-5 gap-4">
+          {categories.map((category) => (
+            <Link
+              key={category.name}
+              href="/shop"
+              className="relative group cursor-pointer"
+            >
+              <div className="relative h-48 md:h-56 rounded-lg overflow-hidden">
+                <Image
+                  src={category.image}
+                  alt={category.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 20vw"
+                  className="object-cover group-hover:scale-105 transition"
+                />
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition flex items-end p-4">
+                  <h3 className="text-white font-semibold text-lg">
+                    {category.name}
+                  </h3>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Best Sellers */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <h2 className="text-4xl font-bold mb-12 text-[#222222]">
+          Best Sellers
+        </h2>
+        <div className="grid md:grid-cols-4 gap-6">
+          {bestSellers.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
+
+      <Footer />
+    </main>
   );
 }
