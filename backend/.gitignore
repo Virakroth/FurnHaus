@@ -12,6 +12,8 @@ Thumbs.db
 .idea
 .env.testing
 storage/logs/*
+!storage/logs/.gitkeep
 bootstrap/cache/*
+!bootstrap/cache/.gitkeep
 .phpstorm.meta.php
 _ide_helper.php

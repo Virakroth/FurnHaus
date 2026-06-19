@@ -1,0 +1,20 @@
+{
+	admin off
+	log {
+		format filter {
+			wrap slog
+			delete request>headers>Authorization
+		}
+	}
+}
+
+:80
+route /index.php* {
+	root /app/public
+	frankenphp
+}
+route {
+	root /app/public
+	rewrite * /index.php
+	frankenphp
+}
