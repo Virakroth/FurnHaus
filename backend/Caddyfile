@@ -1,11 +1,5 @@
 {
 	admin off
-	log {
-		format filter {
-			wrap slog
-			delete request>headers>Authorization
-		}
-	}
 }
 
 :80
@@ -18,3 +12,4 @@ route {
 	rewrite * /index.php
 	frankenphp
 }
+
