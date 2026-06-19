@@ -62,5 +62,8 @@ return [
         'Url' => \Illuminate\Support\Facades\URL::class,
         'Validator' => \Illuminate\Support\Facades\Validator::class,
         'View' => \Illuminate\Support\Facades\View::class,
+        // Lowercase aliases for Laravel 11
+        'view' => \Illuminate\Support\Facades\View::class,
+        'db' => \Illuminate\Support\Facades\DB::class,
     ],
 ];
