@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, X, Home } from 'lucide-react';
 import { isAuthenticated } from '@/app/lib/auth';
 
 export function Header() {
@@ -41,7 +41,10 @@ export function Header() {
       <div className="bg-white sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-[#222222]">FurnHaus</Link>
+            <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-[#222222] hover:text-[#666666] transition">
+              <Home className="w-7 h-7" />
+              <span>FurnHaus</span>
+            </Link>
 
             <nav className="hidden md:flex items-center gap-8">
               <Link href="/" className="text-[#666666] hover:text-black transition font-medium">Home</Link>
