@@ -1,4 +1,4 @@
 {
-  "buildCommand": "composer install",
-  "startCommand": "php artisan serve --host=0.0.0.0 --port=$PORT"
+  "buildCommand": "composer install && mkdir -p bootstrap/cache storage/logs storage/framework/views && chmod -R 755 bootstrap/cache storage",
+  "startCommand": "bash -c 'mkdir -p bootstrap/cache storage/logs storage/framework/views && chmod -R 755 bootstrap/cache storage && php artisan serve --host=0.0.0.0 --port=$PORT'"
 }
