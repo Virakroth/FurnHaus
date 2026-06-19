@@ -142,11 +142,11 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
 
             <div className="flex items-center gap-4 mb-8">
               <span className="text-4xl font-bold text-[#222222]">
-                ${parseFloat(product.price as string).toFixed(2)}
+                ${(typeof product.price === 'string' ? parseFloat(product.price) : product.price).toFixed(2)}
               </span>
               {product.originalPrice && (
                 <span className="text-xl text-[#666666] line-through">
-                  ${parseFloat(product.originalPrice as string).toFixed(2)}
+                  ${(typeof product.originalPrice === 'string' ? parseFloat(product.originalPrice) : product.originalPrice).toFixed(2)}
                 </span>
               )}
             </div>

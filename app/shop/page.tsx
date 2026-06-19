@@ -9,9 +9,13 @@ import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 
 export default function Shop() {
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("popular");
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedPriceRange, setSelectedPriceRange] = useState<string[]>([]);
+  const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
 
   const fetchProducts = async () => {
     try {
@@ -40,12 +44,20 @@ export default function Shop() {
           description: product.description,
         }));
         console.log("Mapped products count:", mappedProducts.length);
+        setAllProducts(mappedProducts);
         setFilteredProducts(mappedProducts);
+        applyFiltersAndSort(mappedProducts);
       } else {
         console.warn("Response missing success or data:", response);
+        // Fallback to empty state
+        setAllProducts([]);
+        setFilteredProducts([]);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
+      // Fallback to empty state on error
+      setAllProducts([]);
+      setFilteredProducts([]);
     } finally {
       setLoading(false);
     }
@@ -54,6 +66,58 @@ export default function Shop() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const applyFiltersAndSort = (products: any[]) => {
+    let filtered = [...products];
+
+    // Apply category filter
+    if (selectedCategories.length > 0 && !selectedCategories.includes("All")) {
+      const categoryMap: { [key: string]: number } = {
+        Chairs: 1, Sofas: 2, Tables: 3, Storage: 5, Desks: 6, Bedroom: 4,
+      };
+      filtered = filtered.filter((p) =>
+        selectedCategories.some((cat) => categoryMap[cat] === p.category)
+      );
+    }
+
+    // Apply price range filter
+    if (selectedPriceRange.length > 0) {
+      filtered = filtered.filter((p) => {
+        const price = p.price;
+        return selectedPriceRange.some((range) => {
+          if (range === "$0 - $200") return price <= 200;
+          if (range === "$200 - $500") return price > 200 && price <= 500;
+          if (range === "$500 - $1000") return price > 500 && price <= 1000;
+          if (range === "$1000+") return price > 1000;
+          return true;
+        });
+      });
+    }
+
+    // Apply material filter
+    if (selectedMaterials.length > 0) {
+      filtered = filtered.filter((p) =>
+        selectedMaterials.some((mat) => p.material.includes(mat))
+      );
+    }
+
+    // Apply sorting
+    if (sortBy === "price-low") {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-high") {
+      filtered.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "newest") {
+      filtered.reverse();
+    } else if (sortBy === "rating") {
+      filtered.sort((a, b) => b.rating - a.rating);
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  useEffect(() => {
+    applyFiltersAndSort(allProducts);
+  }, [selectedCategories, selectedPriceRange, selectedMaterials, sortBy, allProducts]);
 
   const categories = [
     "All",
@@ -89,7 +153,20 @@ export default function Shop() {
                     key={cat}
                     className="flex items-center gap-2 cursor-pointer"
                   >
-                    <input type="checkbox" className="w-4 h-4" />
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4"
+                      checked={selectedCategories.includes(cat)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCategories([...selectedCategories, cat]);
+                        } else {
+                          setSelectedCategories(
+                            selectedCategories.filter((c) => c !== cat)
+                          );
+                        }
+                      }}
+                    />
                     <span className="text-sm text-[#333333]">{cat}</span>
                   </label>
                 ))}
@@ -105,7 +182,20 @@ export default function Shop() {
                       key={range}
                       className="flex items-center gap-2 cursor-pointer"
                     >
-                      <input type="checkbox" className="w-4 h-4" />
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4"
+                        checked={selectedPriceRange.includes(range)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedPriceRange([...selectedPriceRange, range]);
+                          } else {
+                            setSelectedPriceRange(
+                              selectedPriceRange.filter((r) => r !== range)
+                            );
+                          }
+                        }}
+                      />
                       <span className="text-sm text-[#333333]">{range}</span>
                     </label>
                   ),
@@ -121,7 +211,20 @@ export default function Shop() {
                     key={mat}
                     className="flex items-center gap-2 cursor-pointer"
                   >
-                    <input type="checkbox" className="w-4 h-4" />
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4"
+                      checked={selectedMaterials.includes(mat)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedMaterials([...selectedMaterials, mat]);
+                        } else {
+                          setSelectedMaterials(
+                            selectedMaterials.filter((m) => m !== mat)
+                          );
+                        }
+                      }}
+                    />
                     <span className="text-sm text-[#333333]">{mat}</span>
                   </label>
                 ))}
@@ -143,6 +246,7 @@ export default function Shop() {
                   className="appearance-none bg-white border border-[#E5E5E5] px-4 py-2 pr-8 rounded cursor-pointer text-[#333333]"
                 >
                   <option value="popular">Sort by: Popularity</option>
+                  <option value="rating">Highest Rated</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
                   <option value="newest">Newest First</option>

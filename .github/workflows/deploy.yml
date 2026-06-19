@@ -1,0 +1,81 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+  BACKEND_URL: ${{ secrets.BACKEND_URL }}
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npx vercel deploy \
+            --prod \
+            --token $VERCEL_TOKEN \
+            --yes \
+            -e NEXT_PUBLIC_API_URL=${{ env.BACKEND_URL }}
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          cd backend
+          # Install railway CLI
+          npm install -g @railway/cli
+          
+          # Deploy
+          railway up \
+            --service ${{ secrets.RAILWAY_SERVICE_ID }} \
+            --environment production
+          
+          # Run migrations
+          railway run php artisan migrate --force --env=production
+          railway run php artisan db:seed --env=production
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend]
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Wait for services
+        run: sleep 10
+      
+      - name: Test backend health
+        run: |
+          curl -f ${{ env.BACKEND_URL }}/api/admin/products \
+            -H "Authorization: Bearer ${{ secrets.TEST_TOKEN }}" \
+            || exit 1
+      
+      - name: Test frontend
+        run: |
+          curl -f ${{ env.FRONTEND_URL }} || exit 1
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()
+    steps:
+      - name: Deployment Status
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+          fi

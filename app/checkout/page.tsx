@@ -3,14 +3,40 @@
 import { Header } from '@/app/components/Header';
 import { Footer } from '@/app/components/Footer';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
-  const subtotal = 1098.00;
-  const shipping = 0;
-  const tax = 87.84;
-  const total = 1185.84;
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [subtotal, setSubtotal] = useState(0);
+  const [shipping, setShipping] = useState(0);
+  const [tax, setTax] = useState(0);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    // Load cart from localStorage
+    const savedCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    setCartItems(savedCart);
+
+    // Calculate totals
+    const calculatedSubtotal = savedCart.reduce(
+      (sum: number, item: any) =>
+        sum +
+        (typeof item.price === 'string'
+          ? parseFloat(item.price)
+          : item.price) *
+          item.quantity,
+      0
+    );
+    const calculatedShipping = calculatedSubtotal > 100 ? 0 : 10;
+    const calculatedTax = calculatedSubtotal * 0.08;
+    const calculatedTotal = calculatedSubtotal + calculatedShipping + calculatedTax;
+
+    setSubtotal(calculatedSubtotal);
+    setShipping(calculatedShipping);
+    setTax(calculatedTax);
+    setTotal(calculatedTotal);
+  }, []);
 
   return (
     <main className="min-h-screen bg-white">
@@ -151,7 +177,9 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between pb-4 border-b border-[#E5E5E5] text-[#333333]">
                 <span>Shipping</span>
-                <span className="text-green-600 font-semibold">FREE</span>
+                <span className={shipping === 0 ? 'text-green-600 font-semibold' : ''}>
+                  {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                </span>
               </div>
               <div className="flex justify-between pb-4 border-b border-[#E5E5E5] text-[#333333]">
                 <span>Tax</span>

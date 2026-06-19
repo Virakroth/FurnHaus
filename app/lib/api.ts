@@ -96,21 +96,25 @@ export async function getProducts(params?: {
 
   const response = await fetch(`${API_URL}/products?${query.toString()}`, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    mode: "cors",
   });
+
+  console.log("Products fetch status:", response.status);
 
   if (!response.ok) {
     const text = await response.text();
     console.error("Products fetch error:", response.status, text);
-    throw new Error(`HTTP ${response.status}: ${text}`);
+    return { success: false, data: [], error: `HTTP ${response.status}` };
   }
 
   try {
-    return await response.json();
+    const data = await response.json();
+    console.log("Products fetched successfully, count:", data.data?.length || 0);
+    return data;
   } catch (e) {
-    const text = await response.text();
-    console.error("Failed to parse products JSON:", text);
-    throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
+    console.error("Failed to parse products JSON:", e);
+    return { success: false, data: [], error: "JSON parse error" };
   }
 }
 
@@ -285,7 +289,12 @@ export async function getAdminStats(token: string) {
 export async function getAdminProducts(token: string, page?: number) {
   const query = page ? `?page=${page}` : "";
   const response = await fetch(`${API_URL}/admin/products${query}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { 
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    mode: "cors",
   });
   return response.json();
 }
@@ -314,15 +323,37 @@ export async function createProduct(
     is_new?: boolean;
   },
 ) {
-  const response = await fetch(`${API_URL}/admin/products`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
-  return response.json();
+  try {
+    const response = await fetch(`${API_URL}/admin/products`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`Create product error - Status ${response.status}:`, text);
+      throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
+    }
+
+    try {
+      return await response.json();
+    } catch (e) {
+      const text = await response.text();
+      console.error("Failed to parse JSON:", text);
+      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
+    }
+  } catch (error: any) {
+    console.error("Create product error:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to create product",
+    };
+  }
 }
 
 export async function updateProduct(
@@ -361,9 +392,49 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(token: string, productId: string | number) {
-  const response = await fetch(`${API_URL}/admin/products/${productId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
+  try {
+    const response = await fetch(`${API_URL}/admin/products/${productId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`Delete error - Status ${response.status}:`, text);
+      throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
+    }
+
+    try {
+      return await response.json();
+    } catch (e) {
+      const text = await response.text();
+      console.error("Failed to parse JSON:", text);
+      throw new Error(`Invalid JSON response: ${text.substring(0, 100)}`);
+    }
+  } catch (error: any) {
+    console.error("Delete product error:", error);
+    return {
+      success: false,
+      message: error.message || "Failed to delete product",
+    };
+  }
+}
+
+// ============ ADMIN ORDERS ============
+export async function getAdminOrders(token: string, page?: number) {
+  const query = page ? `?page=${page}` : "";
+  const response = await fetch(`${API_URL}/admin/orders${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
   });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
   return response.json();
 }

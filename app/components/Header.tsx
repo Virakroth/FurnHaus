@@ -1,11 +1,40 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ShoppingCart, Search, User, Menu, X } from 'lucide-react';
+import { isAuthenticated } from '@/app/lib/auth';
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check auth status
+    setIsLoggedIn(isAuthenticated());
+
+    // Load initial cart count
+    const updateCartCount = () => {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const count = cart.reduce((total: number, item: any) => total + item.quantity, 0);
+      setCartCount(count);
+    };
+
+    updateCartCount();
+
+    // Listen for storage changes
+    window.addEventListener('storage', updateCartCount);
+    
+    // Also listen for custom events from ProductCard
+    const handleCartUpdate = () => updateCartCount();
+    window.addEventListener('cartUpdated', handleCartUpdate);
+
+    return () => {
+      window.removeEventListener('storage', updateCartCount);
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+    };
+  }, []);
 
   return (
     <header className="border-b">
@@ -24,12 +53,16 @@ export function Header() {
 
             <div className="flex items-center gap-4">
               <Search className="w-5 h-5 cursor-pointer text-[#444444] hover:text-black transition" />
-              <Link href="/login">
+              <Link href={isLoggedIn ? "/dashboard" : "/login"}>
                 <User className="w-5 h-5 cursor-pointer text-[#444444] hover:text-black transition" />
               </Link>
               <Link href="/cart" className="relative">
                 <ShoppingCart className="w-5 h-5 text-[#444444] hover:text-black transition" />
-                <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">0</span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             </div>
 
@@ -37,7 +70,7 @@ export function Header() {
               className="md:hidden"
               onClick={() => setMobileOpen(!mobileOpen)}
             >
-              {mobileOpen ? <X /> : <Menu />}
+              {mobileOpen ? <X className="text-black" /> : <Menu className="text-black" />}
             </button>
           </div>
 

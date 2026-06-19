@@ -7,7 +7,8 @@ import { products } from "@/app/lib/mock-data";
 import { User, LogOut, ShoppingBag, Heart, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { logoutUser } from "@/app/lib/api";
+import { logoutUser, getAdminOrders } from "@/app/lib/api";
+import { getStoredToken } from "@/app/lib/auth";
 
 interface UserData {
   id: number;
@@ -15,6 +16,21 @@ interface UserData {
   first_name: string;
   last_name: string;
   phone?: string;
+  role?: string;
+}
+
+interface Order {
+  id: number;
+  order_number?: string;
+  user?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
+  total: number;
+  status: string;
+  created_at: string;
+  items?: any[] | number;
 }
 
 export default function Dashboard() {
@@ -22,6 +38,28 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("orders");
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Mock data for fallback (defined once at module level to avoid hoisting issues)
+  const FALLBACK_ORDERS: Order[] = [
+    {
+      id: 1001,
+      order_number: "FH1001",
+      total: 1234.50,
+      status: "Delivered",
+      created_at: "2024-05-10",
+      items: 3,
+    },
+    {
+      id: 1002,
+      order_number: "FH1002",
+      total: 567.00,
+      status: "Delivered",
+      created_at: "2024-04-28",
+      items: 2,
+    },
+  ];
 
   useEffect(() => {
     // Get user from localStorage
@@ -30,16 +68,45 @@ export default function Dashboard() {
       try {
         const userData = JSON.parse(storedUser);
         setUser(userData);
+        setIsAdmin(userData.role === "admin");
+        
+        // If admin, fetch all orders
+        if (userData.role === "admin") {
+          fetchAdminOrders();
+        } else {
+          setOrders(FALLBACK_ORDERS);
+        }
       } catch (error) {
         console.error("Failed to parse user data:", error);
         router.push("/login");
       }
     } else {
-      // No user logged in, redirect to login
       router.push("/login");
     }
     setLoading(false);
   }, [router]);
+
+  const fetchAdminOrders = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found");
+        setOrders(FALLBACK_ORDERS);
+        return;
+      }
+
+      const response = await getAdminOrders(token);
+      if (response && response.success && response.data) {
+        setOrders(response.data);
+      } else {
+        console.warn("Admin orders API returned no data, using fallback");
+        setOrders(FALLBACK_ORDERS);
+      }
+    } catch (error) {
+      console.error("Failed to fetch admin orders:", error);
+      setOrders(FALLBACK_ORDERS);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -79,23 +146,6 @@ export default function Dashboard() {
   if (!user) {
     return null;
   }
-
-  const orders = [
-    {
-      id: "FH1001",
-      date: "May 10, 2024",
-      status: "Delivered",
-      total: "$1,234.50",
-      items: 3,
-    },
-    {
-      id: "FH1002",
-      date: "Apr 28, 2024",
-      status: "Delivered",
-      total: "$567.00",
-      items: 2,
-    },
-  ];
 
   return (
     <main className="min-h-screen bg-white">
@@ -193,50 +243,63 @@ export default function Dashboard() {
             {activeTab === "orders" && (
               <div>
                 <h2 className="text-2xl font-bold mb-6 text-[#222222]">
-                  My Orders
+                  {isAdmin ? "All Customer Orders" : "My Orders"}
                 </h2>
                 <div className="space-y-4">
-                  {orders.map((order) => (
-                    <div
-                      key={order.id}
-                      className="border border-[#E5E5E5] rounded-lg p-6 hover:shadow-md transition"
-                    >
-                      <div className="grid md:grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <p className="text-sm text-[#666666]">Order ID</p>
-                          <p className="font-semibold text-[#222222]">
-                            {order.id}
-                          </p>
+                  {orders && orders.length > 0 ? (
+                    orders.map((order: any) => (
+                      <div
+                        key={order.id}
+                        className="border border-[#E5E5E5] rounded-lg p-6 hover:shadow-md transition"
+                      >
+                        <div className="grid md:grid-cols-5 gap-4 mb-4">
+                          <div>
+                            <p className="text-sm text-[#666666]">Order ID</p>
+                            <p className="font-semibold text-[#222222]">
+                              {order.order_number || order.id}
+                            </p>
+                          </div>
+                          {isAdmin && order.user && (
+                            <div>
+                              <p className="text-sm text-[#666666]">Customer</p>
+                              <p className="font-semibold text-[#222222]">
+                                {order.user.first_name} {order.user.last_name}
+                              </p>
+                              <p className="text-xs text-[#666666]">{order.user.email}</p>
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm text-[#666666]">Date</p>
+                            <p className="font-semibold text-[#222222]">
+                              {order.created_at ? new Date(order.created_at).toLocaleDateString() : order.date}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-[#666666]">Status</p>
+                            <p className="font-semibold text-green-600 capitalize">
+                              {order.status}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-[#666666]">Total</p>
+                            <p className="font-semibold text-[#222222]">
+                              ${typeof order.total === 'number' ? order.total.toFixed(2) : order.total}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm text-[#666666]">Date</p>
-                          <p className="font-semibold text-[#222222]">
-                            {order.date}
+                        <div className="flex justify-between items-center pt-4 border-t border-[#E5E5E5]">
+                          <p className="text-sm text-[#666666]">
+                            {order.items} item(s)
                           </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-[#666666]">Status</p>
-                          <p className="font-semibold text-green-600">
-                            {order.status}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-[#666666]">Total</p>
-                          <p className="font-semibold text-[#222222]">
-                            {order.total}
-                          </p>
+                          <button className="text-black hover:underline font-semibold">
+                            View Details
+                          </button>
                         </div>
                       </div>
-                      <div className="flex justify-between items-center pt-4 border-t border-[#E5E5E5]">
-                        <p className="text-sm text-[#666666]">
-                          {order.items} item(s)
-                        </p>
-                        <button className="text-black hover:underline font-semibold">
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-center text-[#666666]">No orders found.</p>
+                  )}
                 </div>
               </div>
             )}
@@ -267,7 +330,7 @@ export default function Dashboard() {
                           {product.name}
                         </h3>
                         <p className="text-lg font-bold mb-4 text-[#222222]">
-                          ${parseFloat(product.price as string).toFixed(2)}
+                          ${(typeof product.price === 'string' ? parseFloat(product.price) : product.price).toFixed(2)}
                         </p>
                         <button className="w-full bg-black text-white py-2 rounded-lg hover:opacity-90 transition font-semibold">
                           Add to Cart

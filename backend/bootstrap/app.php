@@ -14,10 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
 
-        // Configure CSRF exceptions for auth routes
+        // Configure CSRF exceptions for all API routes (they use Bearer token auth)
         $middleware->validateCsrfTokens(except: [
-            'api/auth/login',
-            'api/auth/register',
+            'api/*',  // Skip CSRF for all API routes - they use stateless Bearer token auth
         ]);
 
         $middleware->alias([
