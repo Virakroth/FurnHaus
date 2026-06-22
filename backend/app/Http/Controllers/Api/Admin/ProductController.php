@@ -55,6 +55,11 @@ class ProductController extends Controller
             $validated['featured_image'] = '/products/placeholder.jpg';
         }
 
+        // Set is_active to true by default so products are visible on the shop
+        if (!isset($validated['is_active'])) {
+            $validated['is_active'] = true;
+        }
+
         $product = Product::create($validated);
 
         return response()->json([
