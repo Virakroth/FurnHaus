@@ -71,17 +71,3 @@ Route::prefix('/blog')->group(function () {
 
 // Admin Routes
 require __DIR__.'/admin.php';
-
-// Temporary Install Route (Production Only for Setup)
-Route::post('/install', function () {
-    if (env('APP_ENV') !== 'production') {
-        return response()->json(['error' => 'Install only available in production'], 403);
-    }
-    
-    try {
-        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
-        return response()->json(['message' => 'Database migrations and seeding completed successfully']);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
