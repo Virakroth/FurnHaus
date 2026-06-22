@@ -50,6 +50,11 @@ class ProductController extends Controller
             'is_new' => 'boolean',
         ]);
 
+        // Set default featured_image if not provided
+        if (empty($validated['featured_image'])) {
+            $validated['featured_image'] = '/products/placeholder.jpg';
+        }
+
         $product = Product::create($validated);
 
         return response()->json([
