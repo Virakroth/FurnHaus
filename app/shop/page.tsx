@@ -4,7 +4,7 @@ import { Header } from "@/app/components/Header";
 import { Footer } from "@/app/components/Footer";
 import { ProductCard } from "@/app/components/ProductCard";
 import { ProductCRUD } from "@/app/components/ProductCRUD";
-import { getProducts } from "@/app/lib/api";
+import { getProducts, resolveProductImageUrl } from "@/app/lib/api";
 import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 
@@ -34,7 +34,7 @@ export default function Shop() {
           originalPrice: product.original_price
             ? parseFloat(product.original_price)
             : undefined,
-          image: product.featured_image || "/products/placeholder.jpg",
+          image: resolveProductImageUrl(product.featured_image),
           category: product.category_id,
           material: product.material || "N/A",
           color: product.color || "N/A",

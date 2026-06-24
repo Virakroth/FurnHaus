@@ -1,4 +1,25 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const API_ORIGIN = new URL(API_URL).origin;
+
+export function resolveProductImageUrl(image?: string | null) {
+  if (!image) {
+    return "/products/placeholder.jpg";
+  }
+
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://") ||
+    image.startsWith("data:")
+  ) {
+    return image;
+  }
+
+  if (image.startsWith("/products/uploads/")) {
+    return `${API_ORIGIN}${image}`;
+  }
+
+  return image;
+}
 
 // ============ AUTHENTICATION ============
 export async function registerUser(data: {

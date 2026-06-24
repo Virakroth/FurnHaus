@@ -3,7 +3,7 @@
 import { Header } from "@/app/components/Header";
 import { Footer } from "@/app/components/Footer";
 import Image from "next/image";
-import { getProduct, getRelatedProducts } from "@/app/lib/api";
+import { getProduct, getRelatedProducts, resolveProductImageUrl } from "@/app/lib/api";
 import { useState, useEffect } from "react";
 import { Star, Heart, Share2, Truck, Shield } from "lucide-react";
 import Link from "next/link";
@@ -24,8 +24,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
           // Map API response to include 'image' field
           const mappedProduct = {
             ...productRes.data,
-            image:
-              productRes.data.featured_image || "/products/placeholder.jpg",
+            image: resolveProductImageUrl(productRes.data.featured_image),
             rating: parseFloat(productRes.data.rating) || 0,
             reviews: productRes.data.reviews_count || 0,
             price: parseFloat(productRes.data.price),
@@ -40,7 +39,7 @@ export default function ProductDetail({ params }: { params: { id: string } }) {
             // Map related products too
             const mappedRelated = (relatedRes.data || []).map((p: any) => ({
               ...p,
-              image: p.featured_image || "/products/placeholder.jpg",
+              image: resolveProductImageUrl(p.featured_image),
               rating: parseFloat(p.rating) || 0,
               reviews: p.reviews_count || 0,
               price: parseFloat(p.price),

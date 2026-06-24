@@ -110,7 +110,7 @@ class ProductController extends Controller
         ]);
 
         $file = $validated['image'];
-        $uploadDirectory = base_path('../public/products/uploads');
+        $uploadDirectory = public_path('products/uploads');
 
         if (!File::exists($uploadDirectory)) {
             File::makeDirectory($uploadDirectory, 0755, true);
@@ -122,7 +122,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'path' => '/products/uploads/' . $filename,
+                'path' => $request->getSchemeAndHttpHost() . '/products/uploads/' . $filename,
             ],
             'message' => 'Image uploaded successfully.',
         ], 201);
