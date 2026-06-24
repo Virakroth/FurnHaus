@@ -328,6 +328,7 @@ export async function createProduct(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(data),
@@ -364,6 +365,7 @@ export async function uploadProductImage(token: string, image: File) {
     const response = await fetch(`${API_URL}/admin/products/image`, {
       method: "POST",
       headers: {
+        Accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: formData,
@@ -418,6 +420,7 @@ export async function updateProduct(
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
@@ -431,6 +434,7 @@ export async function deleteProduct(token: string, productId: string | number) {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
         Authorization: `Bearer ${token}`,
       },
       mode: "cors",
