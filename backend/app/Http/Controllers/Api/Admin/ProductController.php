@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -86,6 +88,7 @@ class ProductController extends Controller
             'color' => 'nullable|string',
             'dimensions' => 'nullable|string',
             'weight' => 'nullable|numeric',
+            'featured_image' => 'nullable|string',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'is_new' => 'boolean',
@@ -98,6 +101,31 @@ class ProductController extends Controller
             'data' => $product,
             'message' => 'Product updated successfully.',
         ]);
+    }
+
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'image' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
+        ]);
+
+        $file = $validated['image'];
+        $uploadDirectory = base_path('../public/products/uploads');
+
+        if (!File::exists($uploadDirectory)) {
+            File::makeDirectory($uploadDirectory, 0755, true);
+        }
+
+        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $file->move($uploadDirectory, $filename);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'path' => '/products/uploads/' . $filename,
+            ],
+            'message' => 'Image uploaded successfully.',
+        ], 201);
     }
 
     public function destroy(Product $product): JsonResponse

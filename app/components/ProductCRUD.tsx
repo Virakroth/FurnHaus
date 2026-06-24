@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createProduct, updateProduct, getCategories, getAdminProducts, deleteProduct } from "@/app/lib/api";
+import { createProduct, updateProduct, getCategories, getAdminProducts, deleteProduct, uploadProductImage } from "@/app/lib/api";
 import { getStoredToken, isAdminUser } from "@/app/lib/auth";
 import { X, Plus, Upload, Trash2, Edit } from "lucide-react";
 
@@ -27,6 +27,7 @@ export function ProductCRUD({
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -134,11 +135,19 @@ export function ProductCRUD({
     const file = files[0];
     
     if (file.type.startsWith("image/")) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Please select an image smaller than 5 MB");
+        setSelectedImageFile(null);
+        setIsDragging(false);
+        return;
+      }
+
+      setError("");
+      setSelectedImageFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
         setImagePreview(result);
-        setFormData((prev) => ({ ...prev, featured_image: result }));
       };
       reader.readAsDataURL(file);
       setIsDragging(false);
@@ -173,6 +182,17 @@ export function ProductCRUD({
 
     try {
       const slug = formData.slug || generateSlug(formData.name);
+      let featuredImage = formData.featured_image || "/products/placeholder.jpg";
+
+      if (selectedImageFile) {
+        const uploadResponse = await uploadProductImage(token, selectedImageFile);
+        if (!uploadResponse.success || !uploadResponse.data?.path) {
+          setError(uploadResponse.message || "Failed to upload product image");
+          setLoading(false);
+          return;
+        }
+        featuredImage = uploadResponse.data.path;
+      }
 
       const productData = {
         name: formData.name,
@@ -181,7 +201,7 @@ export function ProductCRUD({
         rating: formData.rating ? parseFloat(formData.rating) : 5,
         category_id: parseInt(formData.category_id),
         material: formData.material.join(", ") || "N/A",
-        featured_image: formData.featured_image || "/products/placeholder.jpg",
+        featured_image: featuredImage,
         description: formData.description || "",
         quantity: parseInt(formData.quantity),
         is_active: true,
@@ -210,6 +230,7 @@ export function ProductCRUD({
           quantity: "10",
         });
         setImagePreview("");
+        setSelectedImageFile(null);
         setIsEditMode(false);
         setEditingProductId(null);
         
@@ -248,6 +269,7 @@ export function ProductCRUD({
       quantity: product.quantity?.toString() || "10",
     });
     setImagePreview(product.featured_image || "");
+    setSelectedImageFile(null);
     setIsEditMode(true);
     setEditingProductId(product.id);
     setIsOpen(true);
@@ -351,6 +373,8 @@ export function ProductCRUD({
                 setIsOpen(false);
                 setError("");
                 setSuccess("");
+                setSelectedImageFile(null);
+                setImagePreview("");
               }}
               className="text-[#666666] hover:text-black transition"
             >
@@ -568,6 +592,8 @@ export function ProductCRUD({
                   setSuccess("");
                   setIsEditMode(false);
                   setEditingProductId(null);
+                  setSelectedImageFile(null);
+                  setImagePreview("");
                 }}
                 className="flex-1 bg-[#E5E5E5] text-[#222222] py-3 rounded-lg hover:bg-[#DDDDDD] transition font-semibold"
               >

@@ -356,6 +356,39 @@ export async function createProduct(
   }
 }
 
+export async function uploadProductImage(token: string, image: File) {
+  try {
+    const formData = new FormData();
+    formData.append("image", image);
+
+    const response = await fetch(`${API_URL}/admin/products/image`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+      mode: "cors",
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`Upload product image error - Status ${response.status}:`, text);
+      throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Upload product image error:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to upload product image",
+    };
+  }
+}
+
 export async function updateProduct(
   token: string,
   productId: string | number,
@@ -369,6 +402,7 @@ export async function updateProduct(
     description?: string;
     short_description?: string;
     quantity?: number;
+    featured_image?: string;
     rating?: number;
     sku?: string;
     original_price?: number;
